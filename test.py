@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EOS Test Runner
+TelaOS Test Runner
 
 Usage: python3 test.py <project_path> [options] [test_names...]
 
@@ -12,7 +12,7 @@ Options:
   -l, --list      List available tests (add -q to see quick set)
   -c, --clean     Clean test binaries before running
   --validate      Check archive structure (no zip)
-  --pack          Validate + create clean archives in /outputs
+  --pack          Validate + create compiler.zip in /outputs
   -h, --help      Show this help
 
 Examples:
@@ -144,48 +144,39 @@ def validate_archives(project_dir: Path) -> int:
 
 
 def pack_archives(project_dir: Path) -> int:
-    """Create clean archives and validate their contents."""
+    """Create compiler.zip for download. Project lives in GitHub — never packaged here."""
     import tempfile
 
     out_dir = Path("/mnt/user-data/outputs")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # compiler.zip — exclude build/, tests/bin/
+    # Always zip as 'compiler/' regardless of actual dir name
     compiler_zip = out_dir / "compiler.zip"
     compiler_zip.unlink(missing_ok=True)
-    r = subprocess.run(
-        ["zip", "-qr", str(compiler_zip), "compiler/",
-         "-x", "compiler/build/*", "compiler/tests/bin/*"],
-        cwd=str(COMPILER_DIR.parent), capture_output=True, text=True
-    )
+    with tempfile.TemporaryDirectory() as link_dir:
+        link = Path(link_dir) / "compiler"
+        link.symlink_to(COMPILER_DIR)
+        r = subprocess.run(
+            ["zip", "-qr", str(compiler_zip), "compiler/",
+             "-x", "compiler/build/*", "compiler/tests/bin/*"],
+            cwd=link_dir, capture_output=True, text=True
+        )
     if r.returncode != 0:
         print(f"✗ zip compiler failed: {r.stderr}")
         return 1
 
-    # esp.zip
-    esp_zip = out_dir / "esp.zip"
-    esp_zip.unlink(missing_ok=True)
-    r = subprocess.run(
-        ["zip", "-qr", str(esp_zip), project_dir.name + "/"],
-        cwd=str(project_dir.parent), capture_output=True, text=True
-    )
-    if r.returncode != 0:
-        print(f"✗ zip esp failed: {r.stderr}")
-        return 1
-
-    # Validate zip contents (extract to temp, run strict validation)
+    # Validate zip contents
     print("=== Archive Validation ===\n")
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         subprocess.run(["unzip", "-qo", str(compiler_zip), "-d", str(tmp)],
                        capture_output=True)
-        subprocess.run(["unzip", "-qo", str(esp_zip), "-d", str(tmp)],
-                       capture_output=True)
 
         validate_script = COMPILER_DIR / "validate_archives.py"
         r = subprocess.run(
             [sys.executable, str(validate_script), "--strict",
-             str(tmp / "compiler"), str(tmp / project_dir.name)],
+             str(tmp / "compiler"), str(project_dir)],
             capture_output=True, text=True
         )
         print(r.stdout, end="")
@@ -194,10 +185,8 @@ def pack_archives(project_dir: Path) -> int:
             return 1
 
     c_size = compiler_zip.stat().st_size / 1024
-    e_size = esp_zip.stat().st_size / 1024
     print(f"\n✓ Packed:")
     print(f"  compiler.zip  {c_size:.0f} KB")
-    print(f"  esp.zip       {e_size:.0f} KB")
     return 0
 
 

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-EOS Project C++20 Syntax Checker
+TelaOS Project Compiler (mock build)
 Usage: python3 build.py <path_to_project> [--rebuild] [--mock]
-       python3 build.py /path/to/EOS
-       python3 build.py /path/to/EOS --rebuild  # force rebuild all
-       python3 build.py /path/to/EOS --mock     # build with LVGL_MOCK_ENABLED
+       python3 build.py /path/to/TelaOS --mock
+       python3 build.py /path/to/TelaOS --mock --rebuild
 """
 
 import subprocess
@@ -75,7 +74,7 @@ def parse_depfile(dep: Path) -> list:
 def compile_one(src: Path, obj: Path, includes: list, defines: list) -> tuple:
     obj.parent.mkdir(parents=True, exist_ok=True)
     
-    cmd = [CXX, f"-std={STD}", "-MMD", "-c", "-o", str(obj)]
+    cmd = [CXX, f"-std={STD}", "-MMD", "-include", "cstring", "-c", "-o", str(obj)]
     cmd += [f"-D{d}" for d in defines]
     cmd += [f"-I{inc}" for inc in includes]
     cmd.append(str(src))
@@ -86,8 +85,8 @@ def compile_one(src: Path, obj: Path, includes: list, defines: list) -> tuple:
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 build.py <path_to_project> [--rebuild]")
-        print("Example: python3 build.py /home/user/EOS")
-        print("         python3 build.py /home/user/EOS --rebuild")
+        print("Example: python3 build.py /path/to/TelaOS --mock")
+        print("         python3 build.py /path/to/TelaOS --mock --rebuild")
         return 1
     
     project_dir = Path(sys.argv[1]).resolve()

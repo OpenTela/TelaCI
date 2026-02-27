@@ -43,22 +43,15 @@ void create_markdown(const char*, const char*, const char*, lv_obj_t*) {}
 #include "ArduinoJson.h"
 // JsonVariant::as<const char*> defined in ArduinoJson.h stub
 
-// log_printf (declared as extern "C" in log_config.h)
-#include <cstdio>
+// All core modules linked from .o files
+#include "utils/psram_alloc.h"
+
+// log_printf (declared in utils/log_config.h with extern "C")
 #include <cstdarg>
 extern "C" int log_printf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    int r = vprintf(fmt, args);
+    int ret = vprintf(fmt, args);
     va_end(args);
-    return r;
+    return ret;
 }
-
-// All core modules linked from .o files
-#include "utils/psram_alloc.h"
-
-// LuaFetch — lua_fetch.cpp fails to compile (missing #include <cstring> in TelaOS)
-extern "C" {
-#include "lua.h"
-}
-namespace LuaFetch { void registerAll(lua_State*) {} }

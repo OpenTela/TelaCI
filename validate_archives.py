@@ -7,7 +7,7 @@ Two modes:
   (default)  Warnings on build artifacts (for dev-time checks)
 
 Usage:
-  python3 validate_archives.py <compiler_dir> [esp_dir] [--strict]
+  python3 validate_archives.py <compiler_dir> [project_dir] [--strict]
 """
 
 import sys
