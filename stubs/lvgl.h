@@ -460,7 +460,20 @@ inline lv_event_code_t lv_event_get_code(lv_event_t*) { return LV_EVENT_CLICKED;
 inline void lv_obj_add_event_cb(lv_obj_t*, lv_event_cb_t, int, void*) {}
 inline void lv_obj_remove_event(lv_obj_t*, int) {}
 
+#ifdef LVGL_MOCK_ENABLED
+inline bool lv_obj_check_type(lv_obj_t* obj, const lv_obj_class_t* cls) {
+    if (!obj || !obj->mock_widget) return false;
+    const auto& t = obj->mock_widget->type;
+    if (cls == &lv_textarea_class) return t == "TextArea";
+    if (cls == &lv_btn_class)      return t == "Button";
+    if (cls == &lv_label_class)    return t == "Label";
+    if (cls == &lv_switch_class)   return t == "Switch";
+    if (cls == &lv_slider_class)   return t == "Slider";
+    return false;
+}
+#else
 inline bool lv_obj_check_type(lv_obj_t*, const lv_obj_class_t*) { return false; }
+#endif
 inline lv_group_t* lv_group_get_default() { return nullptr; }
 inline lv_obj_t* lv_group_get_focused(lv_group_t*) { return nullptr; }
 inline void lv_obj_send_event(lv_obj_t*, uint32_t, void*) {}

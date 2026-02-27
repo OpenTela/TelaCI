@@ -521,23 +521,23 @@ int main() {
 
     TEST("ui type editInput Hello → 2-arg, widget+text path") {
         auto r = R("ui type editInput Hello");
-        // 2 args → widget mode: focusInput("editInput")
-        // fails at lv_obj_check_type mock → "not found or not an input"
-        if (!r.success && r.errorMessage.find("not") != std::string::npos) PASS();
-        else FAIL_V("wrong error: '%s'", r.errorMessage.c_str());
+        // 2 args → widget mode: focusInput("editInput") → succeeds (mock textarea)
+        if (r.success) PASS();
+        else FAIL_V("expected success: '%s'", r.errorMessage.c_str());
     }
 
     TEST("ui type editInput \"Hello World\" → 2-arg, quoted text [QUOTE FIX]") {
         auto r = R("ui type editInput \"Hello World\"");
-        // tokens: ["editInput", "Hello World"] → 2 args → widget mode
-        if (!r.success && r.errorMessage.find("not") != std::string::npos) PASS();
-        else FAIL_V("wrong error: '%s'", r.errorMessage.c_str());
+        // tokens: ["editInput", "Hello World"] → 2 args → widget mode → succeeds
+        if (r.success) PASS();
+        else FAIL_V("expected success: '%s'", r.errorMessage.c_str());
     }
 
     TEST("ui type a → 1-arg, single char") {
         auto r = R("ui type a");
-        if (!r.success && r.errorMessage.find("focus") != std::string::npos) PASS();
-        else FAIL_V("wrong error: '%s'", r.errorMessage.c_str());
+        // 1 arg → types "a" into currently focused textarea (from previous test)
+        if (r.success) PASS();
+        else FAIL("expected success: textarea already focused");
     }
 
     // ─── 9. sys commands ────────────────────────────────────
