@@ -5,7 +5,7 @@
  * - Basic 2x2: hierarchy, child positions in grid
  * - Mixed widgets: label + button in cells
  * - Single row: 3 columns
- * - Grid structure: correct parent-child relationships
+ * - CSS classes on td: width/height from CSS
  */
 
 #include <cstdio>
@@ -86,6 +86,32 @@ static const char* HTML_SINGLE_ROW = R"HTML(
 </app>
 )HTML";
 
+static const char* HTML_CSS = R"HTML(
+<app>
+  <ui default="/main">
+    <page id="main">
+      <table w="100%">
+        <tr>
+          <td class="wide"><label id="l1">Wide</label></td>
+          <td class="narrow"><label id="l2">Narrow</label></td>
+        </tr>
+        <tr>
+          <td class="wide"><button id="b1" class="cell">B1</button></td>
+          <td class="narrow"><button id="b2" class="cell">B2</button></td>
+        </tr>
+      </table>
+    </page>
+  </ui>
+  <style>
+    .wide { width: 70%; height: 40; }
+    .narrow { width: 30%; height: 40; }
+    .cell { width: 100%; height: 100%; bgcolor: #333; radius: 0; }
+  </style>
+  <state/>
+  <script language="lua"></script>
+</app>
+)HTML";
+
 static void render(const char* html) {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
@@ -94,7 +120,6 @@ static void render(const char* html) {
     UI::Engine::instance().render(html);
 }
 
-// Helper: find table container (first Container child of page)
 static MockWidget* findTable(MockWidget* page) {
     if (!page) return nullptr;
     for (auto* child : page->children) {
@@ -103,7 +128,6 @@ static MockWidget* findTable(MockWidget* page) {
     return nullptr;
 }
 
-// Helper: get tr by index from table
 static MockWidget* getTr(MockWidget* table, int index) {
     if (!table) return nullptr;
     int trIdx = 0;
@@ -116,7 +140,6 @@ static MockWidget* getTr(MockWidget* table, int index) {
     return nullptr;
 }
 
-// Helper: get td by index from tr
 static MockWidget* getTd(MockWidget* tr, int index) {
     if (!tr) return nullptr;
     int tdIdx = 0;
@@ -129,7 +152,6 @@ static MockWidget* getTd(MockWidget* tr, int index) {
     return nullptr;
 }
 
-// Helper: get first widget inside td
 static MockWidget* getCellWidget(MockWidget* td) {
     if (!td || td->children.empty()) return nullptr;
     return td->children[0];
@@ -139,7 +161,6 @@ int main() {
     printf("=== TABLE LAYOUT TESTS ===\n\n");
     int passed = 0, total = 0;
 
-    // === Basic 2x2 ===
     printf("Basic 2x2 table:\n");
     render(HTML_BASIC);
     auto* page = LvglMock::g_screen->first("Container");
@@ -212,7 +233,6 @@ int main() {
         else { char buf[64]; snprintf(buf, sizeof(buf), "expected 4, got %d", count); FAIL(buf); }
     }
 
-    // === Mixed widgets ===
     printf("\nMixed widgets in table:\n");
     render(HTML_MIXED);
     page = LvglMock::g_screen->first("Container");
@@ -242,7 +262,6 @@ int main() {
         else FAIL(w ? w->text.c_str() : "not found");
     }
 
-    // === Single row ===
     printf("\nSingle row (3 columns):\n");
     render(HTML_SINGLE_ROW);
     page = LvglMock::g_screen->first("Container");
@@ -270,21 +289,72 @@ int main() {
     }
 
     TEST("b1 in col 0") {
-        auto* td = getTd(getTr(table, 0), 0);
-        if (td && td->findById("b1")) PASS();
+        if (getTd(getTr(table, 0), 0) && getTd(getTr(table, 0), 0)->findById("b1")) PASS();
         else FAIL("b1 not at col 0");
     }
 
     TEST("b2 in col 1") {
-        auto* td = getTd(getTr(table, 0), 1);
-        if (td && td->findById("b2")) PASS();
+        if (getTd(getTr(table, 0), 1) && getTd(getTr(table, 0), 1)->findById("b2")) PASS();
         else FAIL("b2 not at col 1");
     }
 
     TEST("b3 in col 2") {
-        auto* td = getTd(getTr(table, 0), 2);
-        if (td && td->findById("b3")) PASS();
+        if (getTd(getTr(table, 0), 2) && getTd(getTr(table, 0), 2)->findById("b3")) PASS();
         else FAIL("b3 not at col 2");
+    }
+
+    printf("\nCSS on table/tr/td:\n");
+    render(HTML_CSS);
+    page = LvglMock::g_screen->first("Container");
+    table = findTable(page);
+
+    TEST("table exists with CSS app") {
+        if (table) PASS();
+        else FAIL("no table");
+    }
+
+    TEST("2 rows in CSS table") {
+        if (!table) { FAIL("no table"); }
+        else {
+            int rows = 0;
+            for (auto* c : table->children) if (c->type == "Container") rows++;
+            if (rows == 2) PASS();
+            else { char buf[64]; snprintf(buf, sizeof(buf), "expected 2, got %d", rows); FAIL(buf); }
+        }
+    }
+
+    TEST("wide td has w from CSS") {
+        auto* td = getTd(getTr(table, 0), 0);
+        if (td && td->w > 0) PASS();
+        else FAIL(td ? "w=0" : "not found");
+    }
+
+    TEST("narrow td has w from CSS") {
+        auto* td = getTd(getTr(table, 0), 1);
+        if (td && td->w > 0) PASS();
+        else FAIL(td ? "w=0" : "not found");
+    }
+
+    TEST("wide td wider than narrow td") {
+        auto* wide = getTd(getTr(table, 0), 0);
+        auto* narrow = getTd(getTr(table, 0), 1);
+        if (wide && narrow && wide->w > narrow->w) PASS();
+        else {
+            char buf[64];
+            snprintf(buf, sizeof(buf), "wide=%d narrow=%d",
+                     wide ? wide->w : -1, narrow ? narrow->w : -1);
+            FAIL(buf);
+        }
+    }
+
+    TEST("button b1 exists inside CSS-styled td") {
+        if (page->findById("b1")) PASS();
+        else FAIL("not found");
+    }
+
+    TEST("label l1 exists inside CSS-styled td") {
+        if (page->findById("l1")) PASS();
+        else FAIL("not found");
     }
 
     printf("\n");
