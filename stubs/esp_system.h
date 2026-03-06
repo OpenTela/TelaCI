@@ -4,6 +4,7 @@
 class EspClass {
 public:
     uint32_t getFreeHeap() { return 100000; }
+    uint32_t getMinFreeHeap() { return 80000; }
     uint32_t getPsramSize() { return 8000000; }
     uint32_t getFreePsram() { return 7000000; }
     const char* getChipModel() { return "ESP32-S3"; }

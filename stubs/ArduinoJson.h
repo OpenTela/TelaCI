@@ -40,6 +40,7 @@ public:
     const char* c_str() const { return str_val.c_str(); }
     bool isNull() const { return str_val.empty(); }
     JsonVariant& operator=(const char* s) { str_val = s ? s : ""; return *this; }
+    JsonVariant& operator=(const std::string& s) { str_val = s; return *this; }
     JsonVariant& operator=(int v) { str_val = std::to_string(v); return *this; }
     JsonVariant& operator=(unsigned int v) { str_val = std::to_string(v); return *this; }
     JsonVariant& operator=(long v) { str_val = std::to_string(v); return *this; }
