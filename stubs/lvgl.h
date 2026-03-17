@@ -120,8 +120,16 @@ extern const lv_font_t lv_font_montserrat_16;
 #define LV_DISPLAY_RENDER_MODE_PARTIAL 1
 #define LV_LABEL_LONG_DOT ((lv_label_long_mode_t)3)
 
-inline int lv_pct(int x) { return 2000 + x; }
+inline int lv_pct(int x) { return 10000 + x; }
+inline int lv_pct_to_px(int v, int base) {
+    if (v >= 10000 && v <= 10100) return (v - 10000) * base / 100;
+    return v;
+}
 #define LV_PCT(x) lv_pct(x)
+#ifndef LV_COORD_IS_PCT
+#define LV_COORD_IS_PCT(v) ((v) >= 10000 && (v) <= 10100)
+#define LV_COORD_GET_PCT(v) ((v) - 10000)
+#endif
 
 typedef enum {
     LV_ALIGN_DEFAULT = 0,
@@ -284,6 +292,10 @@ inline void lv_obj_set_size(lv_obj_t* obj, int w, int h) {
 }
 inline void lv_obj_set_width(lv_obj_t* obj, int w) { if (obj && obj->mock_widget) obj->mock_widget->w = w; }
 inline void lv_obj_set_height(lv_obj_t* obj, int h) { if (obj && obj->mock_widget) obj->mock_widget->h = h; }
+inline void lv_obj_set_style_min_width(lv_obj_t*, int, int) {}
+inline void lv_obj_set_style_max_width(lv_obj_t*, int, int) {}
+inline void lv_obj_set_style_min_height(lv_obj_t*, int, int) {}
+inline void lv_obj_set_style_max_height(lv_obj_t*, int, int) {}
 inline void lv_obj_set_x(lv_obj_t* obj, int x) { if (obj && obj->mock_widget) { obj->mock_widget->x = x; } }
 inline void lv_obj_set_y(lv_obj_t* obj, int y) { if (obj && obj->mock_widget) obj->mock_widget->y = y; }
 inline void lv_label_set_text(lv_obj_t* obj, const char* txt) {
@@ -409,6 +421,10 @@ inline void lv_obj_set_pos(lv_obj_t*, int, int) {}
 inline void lv_obj_set_size(lv_obj_t*, int, int) {}
 inline void lv_obj_set_width(lv_obj_t*, int) {}
 inline void lv_obj_set_height(lv_obj_t*, int) {}
+inline void lv_obj_set_style_min_width(lv_obj_t*, int, int) {}
+inline void lv_obj_set_style_max_width(lv_obj_t*, int, int) {}
+inline void lv_obj_set_style_min_height(lv_obj_t*, int, int) {}
+inline void lv_obj_set_style_max_height(lv_obj_t*, int, int) {}
 inline void lv_obj_set_x(lv_obj_t*, int) {}
 inline void lv_obj_set_y(lv_obj_t*, int) {}
 // _unique_id defined in widget_common.h
@@ -418,6 +434,25 @@ inline int lv_obj_get_x(lv_obj_t* obj) { return (obj && obj->mock_widget) ? obj-
 inline int lv_obj_get_y(lv_obj_t* obj) { return (obj && obj->mock_widget) ? obj->mock_widget->y : 0; }
 inline int lv_obj_get_width(lv_obj_t* obj) { return (obj && obj->mock_widget) ? obj->mock_widget->w : 100; }
 inline int lv_obj_get_height(lv_obj_t* obj) { return (obj && obj->mock_widget) ? obj->mock_widget->h : 100; }
+inline int lv_obj_get_content_height(lv_obj_t* obj) { return (obj && obj->mock_widget) ? obj->mock_widget->h : 100; }
+// Resolve lv_pct values to pixels from parent chain
+inline void lv_obj_update_layout(lv_obj_t* obj) {
+    if (!obj || !obj->mock_widget || !obj->parent) return;
+    auto* w = obj->mock_widget;
+    auto* p = obj->parent->mock_widget;
+    if (!p) return;
+    // lv_pct(x) = 10000+x in mock — resolve from parent
+    if (w->w >= 10000 && w->w <= 10200) {
+        int pct = w->w - 10000;
+        int pw = (p->w >= 10000) ? 480 : p->w;  // fallback to screen
+        w->w = pw * pct / 100;
+    }
+    if (w->h >= 10000 && w->h <= 10200) {
+        int pct = w->h - 10000;
+        int ph = (p->h >= 10000) ? 480 : p->h;
+        w->h = ph * pct / 100;
+    }
+}
 inline void lv_obj_get_coords(lv_obj_t* obj, lv_area_t* area) {
     if (!area) return;
     if (obj && obj->mock_widget) {
@@ -783,6 +818,10 @@ inline int32_t lv_obj_get_index(const lv_obj_t* obj) {
 inline void lv_obj_set_style_transform_width(lv_obj_t*, int, int) {}
 inline void lv_obj_set_style_transform_height(lv_obj_t*, int, int) {}
 inline int lv_obj_get_style_pad_bottom(lv_obj_t* obj, int) { return (obj && obj->mock_widget) ? obj->mock_widget->padBottom : 0; }
+inline int lv_obj_get_style_max_height(lv_obj_t*, int) { return 0; }
+inline int lv_obj_get_style_min_height(lv_obj_t*, int) { return 0; }
+inline int lv_obj_get_style_max_width(lv_obj_t*, int) { return 0; }
+inline int lv_obj_get_style_min_width(lv_obj_t*, int) { return 0; }
 inline int lv_obj_get_style_pad_top(lv_obj_t* obj, int) { return (obj && obj->mock_widget) ? obj->mock_widget->padTop : 0; }
 
 // Touch input states
