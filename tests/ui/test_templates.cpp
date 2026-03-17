@@ -169,6 +169,27 @@ static const char* HTML_CONFLICT = R"HTML(
 </app>
 )HTML";
 
+static const char* HTML_SLASH_IN_ATTR = R"HTML(
+<app>
+  <templates>
+    <template id="Op">
+      <button id="op_{id}" onclick="{click}">{label}</button>
+    </template>
+  </templates>
+  <ui default="/main">
+    <page id="main">
+      <Op id="div" click="opDiv" label="/"/>
+      <Op id="mul" click="opMul" label="*"/>
+    </page>
+  </ui>
+  <state/>
+  <script language="lua">
+    function opDiv() end
+    function opMul() end
+  </script>
+</app>
+)HTML";
+
 static LuaEngine g_engine;
 
 static void loadApp(const char* html) {
@@ -347,6 +368,26 @@ int main() {
         int count = page ? page->count("Button", true) : 0;
         if (count == 0) PASS();
         else { char buf[64]; snprintf(buf, sizeof(buf), "expected 0 (conflict), got %d", count); FAIL(buf); }
+    }
+
+    printf("\nSlash in attribute value:\n");
+    renderOnly(HTML_SLASH_IN_ATTR);
+    page = LvglMock::g_screen->first("Container");
+
+    TEST("op_div exists (label='/')") {
+        if (page && page->findById("op_div")) PASS();
+        else FAIL("not found");
+    }
+
+    TEST("op_mul exists (label='*')") {
+        if (page && page->findById("op_mul")) PASS();
+        else FAIL("not found");
+    }
+
+    TEST("2 buttons total") {
+        int count = page ? page->count("Button", true) : 0;
+        if (count == 2) PASS();
+        else { char buf[64]; snprintf(buf, sizeof(buf), "expected 2, got %d", count); FAIL(buf); }
     }
 
 
