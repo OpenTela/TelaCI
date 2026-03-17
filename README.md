@@ -1,7 +1,8 @@
-# TelaOS Test Suite — Compiler & Test Framework v3.0
+# TelaOS Test Suite — Compiler & Test Framework v3.1
 
 ## Changelog
 
+- **v3.1**: 53 теста (~1050 проверок). Тесты шаблонов (`<template>`, `@for`, вложенные, slash в атрибутах), canvas, coords, type coercion. Stubs: lvgl pct range fix.
 - **v3.0**: Переименование EOS → TelaOS, убран esp.zip из `--pack`, актуализация документации
 - **v2.3**: Исходники ckdl вложены в репо, Lua-стабы убраны (всегда реальная Lua 5.4), единый пайплайн тестов
 - **v2.2**: Тесты с реальным Lua VM, forward declaration preprocessor
@@ -13,7 +14,7 @@
 
 Компиляция и тестирование [TelaOS](https://github.com/OpenTela/TelaOS) на хосте без ESP32.
 
-**44 теста · ~930 проверок · 11K LOC тестов · 2K LOC стабов**
+**53 теста · ~1050 проверок · 13K LOC тестов · 2K LOC стабов**
 
 ```bash
 python3 build.py /path/to/TelaOS --mock    # компиляция
@@ -66,17 +67,17 @@ telaci/
 │   ├── ckdl/             # KDL парсер (исходники + libkdl.a)
 │   └── lua54/            # Lua 5.4 (include + liblua54.a)
 │
-├── tests/                # Тесты (44 файла)
-│   ├── console/          # Консольное API (4)
-│   ├── core/             # Ядро системы (4)
-│   ├── csv/              # CSV парсер (1)
-│   ├── e2e/              # Сквозные тесты (6)
-│   ├── lua/              # Lua VM (7)
-│   ├── parser/           # HTML парсер (2)
-│   ├── ui/               # UI движок (11)
-│   ├── utils/            # Утилиты (5)
-│   ├── widgets/          # Виджеты (3)
-│   ├── yaml/             # YAML/Lua (1)
+├── tests/                # 53 теста, ~1050 проверок
+│   ├── console/          # 4 файла, 168 проверок — консольное API, команды, парсинг
+│   ├── core/             # 5 файлов, 81 проверка — state store, приведение типов, app meta
+│   ├── csv/              # 1 файл, 24 проверки — CSV парсер
+│   ├── e2e/              # 6 файлов, 132 проверки — калькулятор, кроссворд, lifecycle, Brainfuck
+│   ├── lua/              # 7 файлов, 123 проверки — таймеры, fetch, ошибки, sandbox
+│   ├── parser/           # 3 файла, 23 проверки — HTML парсер, HTML→KDL
+│   ├── ui/               # 16 файлов, 253 проверки — CSS, шаблоны, @for, canvas, coords, z-index
+│   ├── utils/            # 5 файлов, 117 проверок — строки, транслитерация, имена
+│   ├── widgets/          # 5 файлов, 44 проверки — binding, button, input, visibility, escaping
+│   ├── yaml/             # 1 файл, 37 проверок — YAML парсер + Lua API
 │   ├── externals.cpp     # Общие external definitions
 │   └── bin/              # Скомпилированные бинарники (gitignore)
 │
@@ -112,7 +113,7 @@ python3 test.py <project_path> [options] [test_names...]
 
 | Опция | Описание |
 |-------|----------|
-| (без аргументов) | Все 44 теста |
+| (без аргументов) | Все 53 теста |
 | `-q, --quick` | 9 ключевых тестов (~5x быстрее), при фейле — авторасширение |
 | `--no-expand` | Не расширять quick при фейле |
 | `css` | Тесты содержащие "css" в имени |
@@ -128,7 +129,7 @@ python3 test.py <project_path> [options] [test_names...]
 
 `state_store` · `calc_console` · `crossword` · `lua_errors` · `css` · `binding` · `lifecycle` · `console_args` · `html_parser`
 
-При фейле автоматически запускаются остальные 35 тестов (отключается `--no-expand`).
+При фейле автоматически запускаются остальные 44 теста (отключается `--no-expand`).
 
 ---
 
