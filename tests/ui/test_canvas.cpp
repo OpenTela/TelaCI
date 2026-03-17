@@ -33,7 +33,7 @@ static uint32_t getPixel(UI::Element* elem, int x, int y) {
 
 // Find canvas element by id
 static UI::Element* findCanvas(const char* id) {
-    for (auto& elem : elements) {
+    for (auto& elem : g_app->elements) {
         if (elem->is_canvas && elem->id == id) {
             return elem.get();
         }
