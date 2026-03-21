@@ -4,7 +4,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* CALC_APP = R"(
@@ -40,9 +41,9 @@ int main() {
     printf("=== HTML Parser Test ===\n\n");
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(CALC_APP);
+    int count = g_core.render(CALC_APP);
     printf("Rendered %d widgets\n\n", count);
     
     auto* page = LvglMock::g_screen->first("Container");

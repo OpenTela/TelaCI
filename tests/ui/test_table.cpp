@@ -12,7 +12,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 using MockWidget = LvglMock::Widget;
@@ -115,9 +116,9 @@ static const char* HTML_CSS = R"HTML(
 static void render(const char* html) {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
-    UI::Engine::instance().render(html);
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.render(html);
 }
 
 static MockWidget* findTable(MockWidget* page) {

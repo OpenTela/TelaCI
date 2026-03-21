@@ -6,7 +6,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* GROUPS_APP = R"(
@@ -41,9 +42,9 @@ int main() {
     int total = 0;
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(GROUPS_APP);
+    int count = g_core.render(GROUPS_APP);
     printf("Rendered %d widgets\n\n", count);
     
     // === All pages in group exist ===
@@ -82,19 +83,19 @@ int main() {
     
     TEST("showPage('main/stats') succeeds");
     {
-        UI::Engine::instance().showPage("main/stats");
+        g_core.showPage("main/stats");
         PASS();
     }
     
     TEST("showPage('main/profile') succeeds");
     {
-        UI::Engine::instance().showPage("main/profile");
+        g_core.showPage("main/profile");
         PASS();
     }
     
     TEST("showPage('main/home') back to first");
     {
-        UI::Engine::instance().showPage("main/home");
+        g_core.showPage("main/home");
         PASS();
     }
     
@@ -103,13 +104,13 @@ int main() {
     
     TEST("showPage('settings') to standalone");
     {
-        UI::Engine::instance().showPage("settings");
+        g_core.showPage("settings");
         PASS();
     }
     
     TEST("showPage('main') back to group");
     {
-        UI::Engine::instance().showPage("main");
+        g_core.showPage("main");
         PASS();
     }
     

@@ -6,7 +6,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 static int g_passed = 0, g_total = 0;
@@ -42,58 +43,58 @@ int main() {
     printf("=== App Lifecycle Tests ===\n\n");
 
     LvglMock::create_screen(240, 240);
-    auto& engine = UI::Engine::instance();
+    auto& engine = g_core;
 
     // --- Launch App A ---
-    State::store().clear();
+    g_core.store().clear();
     engine.render(APP_A);
 
     TEST("App A: default state greeting = 'Hello A'") {
-        if (State::store().getString("greeting") == "Hello A") PASS();
-        else FAIL(State::store().getString("greeting").c_str());
+        if (g_core.store().getString("greeting") == "Hello A") PASS();
+        else FAIL(g_core.store().getString("greeting").c_str());
     }
 
-    State::store().set("score", "42");
+    g_core.store().set("score", "42");
     TEST("App A: score set to 42") {
-        if (State::store().getString("score") == "42") PASS();
+        if (g_core.store().getString("score") == "42") PASS();
         else FAIL("not set");
     }
 
     // --- Switch to App B (simulates showLauncher + launch) ---
-    engine.clear();
-    State::store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.store().clear();
     engine.render(APP_B);
 
     TEST("App B: default state status = 'Ready B'") {
-        if (State::store().getString("status") == "Ready B") PASS();
-        else FAIL(State::store().getString("status").c_str());
+        if (g_core.store().getString("status") == "Ready B") PASS();
+        else FAIL(g_core.store().getString("status").c_str());
     }
 
     TEST("App B: App A's 'score' is gone") {
-        auto v = State::store().getString("score");
+        auto v = g_core.store().getString("score");
         if (v.empty()) PASS();
         else FAIL(v.c_str());
     }
 
     TEST("App B: App A's 'greeting' is gone") {
-        auto v = State::store().getString("greeting");
+        auto v = g_core.store().getString("greeting");
         if (v.empty()) PASS();
         else FAIL(v.c_str());
     }
 
     // --- Back to App A (fresh) ---
-    engine.clear();
-    State::store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.store().clear();
     engine.render(APP_A);
 
     TEST("App A re-launch: greeting back to default") {
-        if (State::store().getString("greeting") == "Hello A") PASS();
-        else FAIL(State::store().getString("greeting").c_str());
+        if (g_core.store().getString("greeting") == "Hello A") PASS();
+        else FAIL(g_core.store().getString("greeting").c_str());
     }
 
     TEST("App A re-launch: score back to default 0") {
-        if (State::store().getString("score") == "0") PASS();
-        else FAIL(State::store().getString("score").c_str());
+        if (g_core.store().getString("score") == "0") PASS();
+        else FAIL(g_core.store().getString("score").c_str());
     }
 
     // --- Verify UI elements ---

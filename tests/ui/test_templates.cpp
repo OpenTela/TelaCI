@@ -6,7 +6,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "engines/lua/lua_engine.h"
 
@@ -190,41 +191,41 @@ static const char* HTML_SLASH_IN_ATTR = R"HTML(
 </app>
 )HTML";
 
-static LuaEngine g_engine;
+static LuaEngine g_lua_engine;
 
 static void loadApp(const char* html) {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    g_engine.shutdown();
+    g_core.store().clear();
+    g_lua_engine.shutdown();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(html);
 
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) State::store().set(name, def ? def : "");
+        if (name) g_core.store().set(name, def ? def : "");
     }
 
-    g_engine.init();
+    g_lua_engine.init();
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) g_engine.setState(name, def ? def : "");
+        if (name) g_lua_engine.setState(name, def ? def : "");
     }
 
     const char* code = ui.scriptCode();
-    if (code && code[0]) g_engine.execute(code);
+    if (code && code[0]) g_lua_engine.execute(code);
 }
 
 static void renderOnly(const char* html) {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
-    UI::Engine::instance().render(html);
+    g_core.store().clear();
+    // removed: g_app = ::g_core.initDynamicApp(nullptr);
+    ::g_core.render(html);
 }
 
 int main() {
@@ -322,15 +323,15 @@ int main() {
     }
 
     TEST("onclick tap(0,1) sets state.tapped") {
-        g_engine.execute("tap(0,1)");
-        auto val = State::store().getString("tapped");
+        g_lua_engine.execute("tap(0,1)");
+        auto val = g_core.store().getString("tapped");
         if (val == "0_1") PASS();
         else FAIL(val.c_str());
     }
 
     TEST("onclick tap(1,0) sets state.tapped") {
-        g_engine.execute("tap(1,0)");
-        auto val = State::store().getString("tapped");
+        g_lua_engine.execute("tap(1,0)");
+        auto val = g_core.store().getString("tapped");
         if (val == "1_0") PASS();
         else FAIL(val.c_str());
     }

@@ -4,6 +4,7 @@
  * Tests Console::exec() with various commands
  */
 #include <cstdio>
+#include "ui/ui_html.h"
 #include <cstring>
 #include "console/console.h"
 #include "core/state_store.h"
@@ -17,7 +18,7 @@ int main() {
     int passed = 0;
     int total = 0;
     
-    State::store().clear();
+    g_core.store().clear();
     
     // === sys ping ===
     printf("sys commands:\n");

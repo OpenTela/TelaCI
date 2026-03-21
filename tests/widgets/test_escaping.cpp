@@ -9,7 +9,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 #define TEST(name) printf("  %-55s ", name); total++;
@@ -40,9 +41,9 @@ int main() {
 
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
-    UI::Engine::instance().render(HTML);
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.render(HTML);
 
     auto* page = LvglMock::g_screen->first("Container");
 

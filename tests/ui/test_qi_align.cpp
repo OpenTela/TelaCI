@@ -8,7 +8,8 @@
 #include "lvgl.h"
 #include "lvgl_mock.h"
 #include "ui_query.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* ALIGN_APP = R"(
@@ -45,9 +46,9 @@ int main() {
     
     // Render to mock
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(ALIGN_APP);
+    int count = g_core.render(ALIGN_APP);
     printf("Rendered %d widgets\n\n", count);
     
     // Convert to KDL and parse with UIQuery

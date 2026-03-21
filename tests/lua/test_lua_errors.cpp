@@ -6,6 +6,7 @@
  * lifecycle edge cases, stack safety.
  */
 #include <cstdio>
+#include "ui/ui_html.h"
 #include <cstring>
 #include <string>
 #include "lvgl.h"
@@ -23,7 +24,7 @@ static LuaEngine eng;
 
 static bool fresh() {
     eng.shutdown();
-    State::store().clear();
+    g_core.store().clear();
     return eng.init();
 }
 
@@ -58,7 +59,7 @@ int main() {
         fresh();
         for (int i = 0; i < 10; i++) eng.execute("!@#$%");
         bool ok = eng.execute("state.y = 'ok'");
-        if (ok && State::store().getString("y") == "ok") PASS();
+        if (ok && g_core.store().getString("y") == "ok") PASS();
         else FAIL("VM broken after 10 errors");
     }
 
@@ -96,7 +97,7 @@ int main() {
         fresh();
         eng.execute("error('boom')");
         bool ok = eng.execute("state.alive = 'yes'");
-        if (ok && State::store().getString("alive") == "yes") PASS();
+        if (ok && g_core.store().getString("alive") == "yes") PASS();
         else FAIL("VM broken after runtime error");
     }
 
@@ -141,7 +142,7 @@ int main() {
         eng.execute("function good() state.v = 'ok' end");
         eng.call("bad");
         eng.call("good");
-        if (State::store().getString("v") == "ok") PASS();
+        if (g_core.store().getString("v") == "ok") PASS();
         else FAIL("VM broken");
     }
 
@@ -185,7 +186,7 @@ int main() {
         for (int i = 0; i < 5000; i++) code += 'A';
         code += "'";
         bool ok = eng.execute(code.c_str());
-        if (ok && State::store().getString("big").size() == 5000) PASS();
+        if (ok && g_core.store().getString("big").size() == 5000) PASS();
         else FAIL("long string failed");
     }
 
@@ -193,14 +194,14 @@ int main() {
         fresh();
         // Use Lua escape for non-ASCII to avoid source encoding issues
         bool ok = eng.execute("state.uni = 'Hello' .. ' ' .. 'World'");
-        if (ok && State::store().getString("uni") == "Hello World") PASS();
+        if (ok && g_core.store().getString("uni") == "Hello World") PASS();
         else FAIL("basic string concat failed");
     }
 
     TEST("binary-safe state values") {
         fresh();
         bool ok = eng.execute("state.bin = string.char(0x41, 0x42, 0x43)");
-        if (ok && State::store().getString("bin") == "ABC") PASS();
+        if (ok && g_core.store().getString("bin") == "ABC") PASS();
         else FAIL("string.char failed");
     }
 
@@ -212,7 +213,7 @@ int main() {
         eng.execute("this is broken");
         eng.setState("key", "val");
         // getState should return what we set
-        if (State::store().getString("key") == "val") PASS();
+        if (g_core.store().getString("key") == "val") PASS();
         else FAIL("setState broken");
     }
 
@@ -220,16 +221,16 @@ int main() {
         fresh();
         eng.execute("state.before = 'saved'");
         eng.execute("error('crash')");
-        if (State::store().getString("before") == "saved") PASS();
+        if (g_core.store().getString("before") == "saved") PASS();
         else FAIL("state lost");
     }
 
     TEST("state set in erroring script up to error point") {
         fresh();
         eng.execute("state.a = '1'; state.b = '2'; error('mid'); state.c = '3'");
-        bool aOk = State::store().getString("a") == "1";
-        bool bOk = State::store().getString("b") == "2";
-        bool cEmpty = State::store().getString("c").empty() || State::store().getString("c") == "";
+        bool aOk = g_core.store().getString("a") == "1";
+        bool bOk = g_core.store().getString("b") == "2";
+        bool cEmpty = g_core.store().getString("c").empty() || g_core.store().getString("c") == "";
         if (aOk && bOk && cEmpty) PASS();
         else FAIL("partial state wrong");
     }
@@ -265,7 +266,7 @@ int main() {
         eng.shutdown();
         eng.init();
         bool ok = eng.execute("state.round = '2'");
-        if (ok && State::store().getString("round") == "2") PASS();
+        if (ok && g_core.store().getString("round") == "2") PASS();
         else FAIL("re-init broken");
     }
 
@@ -309,7 +310,7 @@ int main() {
         eng.execute("function bad() error('x') end");
         for (int i = 0; i < 100; i++) eng.call("bad");
         bool ok = eng.execute("state.final = 'ok'");
-        if (ok && State::store().getString("final") == "ok") PASS();
+        if (ok && g_core.store().getString("final") == "ok") PASS();
         else FAIL("VM broken after many errors");
     }
 

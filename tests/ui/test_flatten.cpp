@@ -13,7 +13,8 @@
 #include <string>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "ui/ui_task.h"
 #include "core/state_store.h"
 
@@ -23,14 +24,14 @@ static int passed = 0, total = 0;
 #define PASS() do { printf("✓\n"); passed++; } while(0)
 #define FAIL(msg) do { printf("✗ %s\n", msg); } while(0)
 
-static auto& engine() { return UI::Engine::instance(); }
+static Core& engine() { return g_core; }
 
 static void render(const char* html) {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    engine().init();
-    engine().render(html);
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.render(html);
 }
 
 // Find the text label child inside a button widget
@@ -115,14 +116,14 @@ int main() {
     }
 
     TEST("{coldInput} updates to '48.3'") {
-        State::store().set("coldInput", "48.3");
+        g_core.store().set("coldInput", "48.3");
         ui_update_bindings("coldInput", "48.3");
         if (btnText("b2") == "48.3") PASS();
         else FAIL(btnText("b2").c_str());
     }
 
     TEST("{coldInput} updates again to '48.35'") {
-        State::store().set("coldInput", "48.35");
+        g_core.store().set("coldInput", "48.35");
         ui_update_bindings("coldInput", "48.35");
         if (btnText("b2") == "48.35") PASS();
         else FAIL(btnText("b2").c_str());
@@ -142,7 +143,7 @@ int main() {
     }
 
     TEST("{myVar} updates to '999'") {
-        State::store().set("myVar", "999");
+        g_core.store().set("myVar", "999");
         ui_update_bindings("myVar", "999");
         if (btnText("b3") == "999") PASS();
         else FAIL(btnText("b3").c_str());
@@ -166,7 +167,7 @@ int main() {
     }
 
     TEST("update coldWater=48.5 → '48.5 m3'") {
-        State::store().set("coldWater", "48.5");
+        g_core.store().set("coldWater", "48.5");
         ui_update_bindings("coldWater", "48.5");
         if (btnText("b4") == "48.5 m3") PASS();
         else FAIL(btnText("b4").c_str());
@@ -186,7 +187,7 @@ int main() {
     }
 
     TEST("update diff=5.7 → '+5.7'") {
-        State::store().set("diff", "5.7");
+        g_core.store().set("diff", "5.7");
         ui_update_bindings("diff", "5.7");
         if (btnText("b5") == "+5.7") PASS();
         else FAIL(btnText("b5").c_str());
@@ -213,14 +214,14 @@ int main() {
     }
 
     TEST("update a=30 → '30 + 20'") {
-        State::store().set("a", "30");
+        g_core.store().set("a", "30");
         ui_update_bindings("a", "30");
         if (btnText("b6") == "30 + 20") PASS();
         else FAIL(btnText("b6").c_str());
     }
 
     TEST("update b=40 → '30 + 40'") {
-        State::store().set("b", "40");
+        g_core.store().set("b", "40");
         ui_update_bindings("b", "40");
         if (btnText("b6") == "30 + 40") PASS();
         else FAIL(btnText("b6").c_str());
@@ -243,14 +244,14 @@ int main() {
     }
 
     TEST("update val=1304 → '1304 kwh'") {
-        State::store().set("val", "1304");
+        g_core.store().set("val", "1304");
         ui_update_bindings("val", "1304");
         if (btnText("b7") == "1304 kwh") PASS();
         else FAIL(btnText("b7").c_str());
     }
 
     TEST("update unit=MWh → '1304 MWh'") {
-        State::store().set("unit", "MWh");
+        g_core.store().set("unit", "MWh");
         ui_update_bindings("unit", "MWh");
         if (btnText("b7") == "1304 MWh") PASS();
         else FAIL(btnText("b7").c_str());
@@ -308,7 +309,7 @@ int main() {
     }
 
     TEST("multi labels: update val=48.5 propagates") {
-        State::store().set("val", "48.5");
+        g_core.store().set("val", "48.5");
         ui_update_bindings("val", "48.5");
         auto t = btnText("m2");
         if (t.find("48.5") != std::string::npos) PASS();
@@ -316,7 +317,7 @@ int main() {
     }
 
     TEST("multi labels: update diff=5.7 propagates") {
-        State::store().set("diff", "5.7");
+        g_core.store().set("diff", "5.7");
         ui_update_bindings("diff", "5.7");
         auto t = btnText("m2");
         if (t.find("5.7") != std::string::npos) PASS();
@@ -388,7 +389,7 @@ int main() {
     }
 
     TEST("plain text {var} updates to 'Count: 5'") {
-        State::store().set("cnt", "5");
+        g_core.store().set("cnt", "5");
         ui_update_bindings("cnt", "5");
         if (btnText("p2") == "Count: 5") PASS();
         else FAIL(btnText("p2").c_str());

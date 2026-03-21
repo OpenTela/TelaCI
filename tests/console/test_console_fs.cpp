@@ -9,7 +9,8 @@
 #include "lvgl.h"
 #include "lvgl_mock.h"
 #include "console/console.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 #define TEST(name) printf("  %-50s ", name); total++;
@@ -18,8 +19,8 @@
 
 static void setup() {
     LvglMock::create_screen(240, 240);
-    State::store().clear();
-    UI::Engine::instance().init();
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
 }
 
 int main() {

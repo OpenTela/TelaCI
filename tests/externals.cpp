@@ -27,6 +27,7 @@ const lv_obj_class_t lv_textarea_class = {};
 const lv_obj_class_t lv_btn_class = {};
 const lv_obj_class_t lv_switch_class = {};
 const lv_obj_class_t lv_slider_class = {};
+const lv_obj_class_t lv_dropdown_class = {};
 
 // LittleFS
 LittleFSClass LittleFS;
@@ -55,3 +56,4 @@ extern "C" int log_printf(const char *fmt, ...) {
     va_end(args);
     return ret;
 }
+

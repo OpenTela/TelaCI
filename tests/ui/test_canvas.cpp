@@ -6,7 +6,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "ui/ui_html_internal.h"
 #include "core/state_store.h"
 
@@ -33,7 +34,7 @@ static uint32_t getPixel(UI::Element* elem, int x, int y) {
 
 // Find canvas element by id
 static UI::Element* findCanvas(const char* id) {
-    for (auto& elem : g_app->elements) {
+    for (auto& elem : g_core.app().elements) {
         if (elem->is_canvas && elem->id == id) {
             return elem.get();
         }
@@ -46,10 +47,10 @@ int main() {
     int passed = 0, total = 0;
 
     LvglMock::create_screen(240, 240);
-    State::store().clear();
+    g_core.store().clear();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(CANVAS_HTML);
 
     auto* canvas = findCanvas("c1");

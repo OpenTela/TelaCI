@@ -11,7 +11,8 @@
 #include <cassert>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "ui/ui_task.h"
 #include "core/state_store.h"
 
@@ -56,9 +57,9 @@ int main() {
     int failures = 0;
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(BINDING_APP);
+    int count = g_core.render(BINDING_APP);
     printf("Rendered %d widgets\n\n", count);
     
     auto* page = LvglMock::g_screen->first("Container");
@@ -111,8 +112,8 @@ int main() {
     printf("\nAfter state changes:\n");
     
     // Change text
-    State::store().set("textVar", "World");
-    State::store().set("counter", "42");
+    g_core.store().set("textVar", "World");
+    g_core.store().set("counter", "42");
     ui_update_bindings("textVar", "World");
     ui_update_bindings("counter", "42");
     
@@ -129,8 +130,8 @@ int main() {
     }
     
     // Change colors
-    State::store().set("boxBg", "#00ff00");
-    State::store().set("boxFg", "#000000");
+    g_core.store().set("boxBg", "#00ff00");
+    g_core.store().set("boxFg", "#000000");
     ui_update_bindings("boxBg", "#00ff00");
     ui_update_bindings("boxFg", "#000000");
     
@@ -147,7 +148,7 @@ int main() {
     }
     
     // Change button color
-    State::store().set("btnColor", "#ff4444");
+    g_core.store().set("btnColor", "#ff4444");
     ui_update_bindings("btnColor", "#ff4444");
     
     TEST("dynBtn bgcolor updated to #ff4444") {
@@ -160,8 +161,8 @@ int main() {
     printf("\nBinding edge cases:\n");
 
     // Multi-var template
-    State::store().set("counter", "99");
-    State::store().set("textVar", "X");
+    g_core.store().set("counter", "99");
+    g_core.store().set("textVar", "X");
     ui_update_bindings("counter", "99");
     ui_update_bindings("textVar", "X");
 
@@ -172,7 +173,7 @@ int main() {
     }
 
     // Empty string value
-    State::store().set("textVar", P::String(""));
+    g_core.store().set("textVar", P::String(""));
     ui_update_bindings("textVar", "");
 
     TEST("lbl1 empty string binding") {
@@ -184,7 +185,7 @@ int main() {
     // Rapid value changes
     for (int i = 0; i < 50; i++) {
         char buf[8]; snprintf(buf, sizeof(buf), "%d", i);
-        State::store().set("counter", buf);
+        g_core.store().set("counter", buf);
         ui_update_bindings("counter", buf);
     }
 

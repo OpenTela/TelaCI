@@ -21,7 +21,8 @@
 
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "ui/ui_touch.h"
 #include "engines/lua/lua_engine.h"
 #include "core/state_store.h"
@@ -51,10 +52,10 @@ static void call(const char* func) {
     Console::exec(buf);
 }
 static std::string get(const char* var) {
-    return State::store().getString(var);
+    return g_core.store().getString(var);
 }
 static std::string page() {
-    auto p = UI::Engine::instance().currentPageId();
+    auto p = g_core.currentPageId();
     return p ? p : "";
 }
 
@@ -451,38 +452,38 @@ static const char* CROSSWORD_HTML = R"(
 //  Harness
 // ═══════════════════════════════════════════════════════
 
-static LuaEngine g_engine;
+static LuaEngine g_lua_engine;
 
 static void loadApp() {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    g_engine.shutdown();
+    g_core.store().clear();
+    g_lua_engine.shutdown();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     TouchSim::init();
     ui.render(CROSSWORD_HTML);
 
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) State::store().set(name, def ? def : "");
+        if (name) g_core.store().set(name, def ? def : "");
     }
 
-    g_engine.init();
+    g_lua_engine.init();
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) g_engine.setState(name, def ? def : "");
+        if (name) g_lua_engine.setState(name, def ? def : "");
     }
 
     ui.setOnClickHandler([](const char* func) {
-        g_engine.call(func);
+        g_lua_engine.call(func);
     });
 
     const char* code = ui.scriptCode();
-    if (code && code[0]) g_engine.execute(code);
+    if (code && code[0]) g_lua_engine.execute(code);
 }
 
 // ═══════════════════════════════════════════════════════

@@ -4,6 +4,7 @@
  * Tests full cycle: input command -> process -> check output
  */
 #include <cstdio>
+#include "ui/ui_html.h"
 #include <cstring>
 #include <string>
 #include <Arduino.h>
@@ -40,7 +41,7 @@ void resetTest() {
     Serial.clear();
     s_cmdId = 0;
     s_cmdPos = 0;
-    State::store().clear();
+    g_core.store().clear();
 }
 
 bool outputContains(const std::string& text) {
@@ -81,7 +82,7 @@ int main() {
         resetTest();
         Serial.setInput("ui set myVar hello\n");
         processSerialInput();
-        auto val = State::store().getString("myVar");
+        auto val = g_core.store().getString("myVar");
         if (outputContains("[1] OK") && val == "hello") PASS();
         else { FAIL("state not set"); printf("      val='%s' out='%s'\n", val.c_str(), Serial.getOutput().c_str()); }
     }
@@ -89,7 +90,7 @@ int main() {
     TEST("ui get var returns value");
     {
         resetTest();
-        State::store().set("testVar", "testValue");
+        g_core.store().set("testVar", "testValue");
         
         // Test via exec directly since Serial output parsing needs better mock
         JsonDocument doc;
@@ -99,7 +100,7 @@ int main() {
         
         // Result.data["value"] check would need full JsonDocument mock
         // For now just verify success and state exists
-        if (r.success && State::store().getString("testVar") == "testValue") PASS();
+        if (r.success && g_core.store().getString("testVar") == "testValue") PASS();
         else { FAIL("get failed"); }
     }
     
@@ -157,7 +158,7 @@ int main() {
         processSerialInput();
         
         // Verify via state directly
-        auto val = State::store().getString("foo");
+        auto val = g_core.store().getString("foo");
         if (outputContains("[1] OK") && val == "bar") PASS();
         else { FAIL("chain failed"); printf("      val='%s'\n", val.c_str()); }
     }

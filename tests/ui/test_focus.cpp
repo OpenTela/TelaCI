@@ -1,5 +1,5 @@
 /**
- * test_focus.cpp — Tests for focus() / focusInput() API
+ * test_focus.cpp — Tests for focus() / UI::focusInput() API
  *
  * Tests:
  * - focus on existing input → true, textarea tracked
@@ -14,7 +14,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "engines/lua/lua_engine.h"
 
@@ -66,33 +67,33 @@ static const char* HTML = R"(
 </app>
 )";
 
-static LuaEngine g_engine;
+static LuaEngine g_lua_engine;
 
 static void loadApp() {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    g_engine.shutdown();
+    g_core.store().clear();
+    g_lua_engine.shutdown();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(HTML);
 
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) State::store().set(name, def ? def : "");
+        if (name) g_core.store().set(name, def ? def : "");
     }
 
-    g_engine.init();
+    g_lua_engine.init();
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) g_engine.setState(name, def ? def : "");
+        if (name) g_lua_engine.setState(name, def ? def : "");
     }
 
     const char* code = ui.scriptCode();
-    if (code && code[0]) g_engine.execute(code);
+    if (code && code[0]) g_lua_engine.execute(code);
 }
 
 int main() {
@@ -111,7 +112,7 @@ int main() {
     }
 
     TEST("focus on input → getFocusedTextarea not null") {
-        lv_obj_t* ta = UI::getFocusedTextarea();
+        lv_obj_t* ta = getFocusedTextarea();
         if (ta != nullptr) PASS();
         else FAIL("null");
     }
@@ -136,18 +137,18 @@ int main() {
 
     TEST("focus switches to inp2 → getFocusedTextarea changes") {
         UI::focusInput("inp1");
-        lv_obj_t* ta1 = UI::getFocusedTextarea();
+        lv_obj_t* ta1 = getFocusedTextarea();
         UI::focusInput("inp2");
-        lv_obj_t* ta2 = UI::getFocusedTextarea();
+        lv_obj_t* ta2 = getFocusedTextarea();
         if (ta1 && ta2 && ta1 != ta2) PASS();
         else FAIL("textarea should change");
     }
 
     TEST("focus inp1 again → back to first textarea") {
         UI::focusInput("inp2");
-        lv_obj_t* ta2 = UI::getFocusedTextarea();
+        lv_obj_t* ta2 = getFocusedTextarea();
         UI::focusInput("inp1");
-        lv_obj_t* ta1 = UI::getFocusedTextarea();
+        lv_obj_t* ta1 = getFocusedTextarea();
         if (ta1 && ta2 && ta1 != ta2) PASS();
         else FAIL("should switch back");
     }
@@ -156,26 +157,26 @@ int main() {
     printf("\nLua API (focus()):\n");
 
     TEST("Lua focus('inp1') → returns true via state") {
-        g_engine.call("focusFirst");
-        if (State::store().getString("focusOk") == "yes") PASS();
-        else FAIL(State::store().getString("focusOk").c_str());
+        g_lua_engine.call("focusFirst");
+        if (g_core.store().getString("focusOk") == "yes") PASS();
+        else FAIL(g_core.store().getString("focusOk").c_str());
     }
 
     TEST("Lua focus('btn1') → returns false via state") {
-        g_engine.call("focusButton");
-        if (State::store().getString("focusBtnOk") == "no") PASS();
+        g_lua_engine.call("focusButton");
+        if (g_core.store().getString("focusBtnOk") == "no") PASS();
         else FAIL("should return false for button");
     }
 
     TEST("Lua focus('doesNotExist') → returns false via state") {
-        g_engine.call("focusGhost");
-        if (State::store().getString("focusGhostOk") == "no") PASS();
+        g_lua_engine.call("focusGhost");
+        if (g_core.store().getString("focusGhostOk") == "no") PASS();
         else FAIL("should return false for missing");
     }
 
     TEST("Lua focus sets getFocusedTextarea") {
-        g_engine.call("focusSecond");
-        lv_obj_t* ta = UI::getFocusedTextarea();
+        g_lua_engine.call("focusSecond");
+        lv_obj_t* ta = getFocusedTextarea();
         if (ta != nullptr) PASS();
         else FAIL("textarea should be set after Lua focus");
     }

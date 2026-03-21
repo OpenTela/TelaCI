@@ -7,7 +7,8 @@
 #include <string>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "engines/lua/lua_engine.h"
 

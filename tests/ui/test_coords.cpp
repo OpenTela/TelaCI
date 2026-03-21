@@ -3,7 +3,8 @@
 #include <cassert>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "ui/ui_coords.h"
 
@@ -76,9 +77,9 @@ void test_table_hierarchy() {
 
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
-    UI::Engine::instance().render(HTML);
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.render(HTML);
     
     auto* page = LvglMock::g_screen->first("Container");
     CHECK(page != nullptr, "page exists");
@@ -130,9 +131,9 @@ void test_valign_guard() {
 
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
-    UI::Engine::instance().render(HTML);
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.render(HTML);
     
     auto* page = LvglMock::g_screen->first("Container");
     auto* lbl_pct = page->findById("lbl_pct");
@@ -184,9 +185,9 @@ void test_page_widgets() {
 
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
-    UI::Engine::instance().render(HTML);
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
+    g_core.render(HTML);
     
     auto* page = LvglMock::g_screen->first("Container");
     auto* btn1 = page->findById("btn1");

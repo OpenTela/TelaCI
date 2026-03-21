@@ -9,7 +9,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* APP = R"(
@@ -44,9 +45,9 @@ int main() {
     int failures = 0;
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(APP);
+    int count = g_core.render(APP);
     printf("Rendered %d widgets\n\n", count);
     
     auto* page = LvglMock::g_screen->first("Container");

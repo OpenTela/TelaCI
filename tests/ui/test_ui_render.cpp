@@ -4,7 +4,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* SIMPLE_APP = R"(
@@ -22,9 +23,9 @@ int main() {
     printf("=== UI Render Test ===\n\n");
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(SIMPLE_APP);
+    int count = g_core.render(SIMPLE_APP);
     printf("Rendered %d widgets\n", count);
     
     // Verify

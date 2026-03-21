@@ -16,7 +16,8 @@
 
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "engines/lua/lua_engine.h"
 #include "core/state_store.h"
 #include "core/call_queue.h"
@@ -30,7 +31,7 @@ static int g_passed = 0, g_total = 0;
 #define SECTION(name)  printf("\n%s:\n", name)
 
 static std::string get(const char* var) {
-    return State::store().getString(var);
+    return g_core.store().getString(var);
 }
 
 static const char* APP_HTML = R"(
@@ -120,7 +121,7 @@ static const char* APP_HTML = R"(
 </app>
 )";
 
-static LuaEngine g_engine;
+static LuaEngine g_lua_engine;
 
 // Fire LVGL timers + drain CallQueue
 static void tick() {
@@ -132,41 +133,41 @@ static void loadApp() {
     LvglMock::reset();
     lv_mock_clear_timers();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    g_engine.shutdown();
+    g_core.store().clear();
+    g_lua_engine.shutdown();
     CallQueue::shutdown();
 
     // Init CallQueue before engine
     CallQueue::init();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(APP_HTML);
 
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) State::store().set(name, def ? def : "");
+        if (name) g_core.store().set(name, def ? def : "");
     }
 
-    g_engine.init();
+    g_lua_engine.init();
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) g_engine.setState(name, def ? def : "");
+        if (name) g_lua_engine.setState(name, def ? def : "");
     }
 
     // Wire up CallQueue handler → Lua engine
     CallQueue::setHandler([](const P::String& func) {
-        g_engine.call(func.c_str());
+        g_lua_engine.call(func.c_str());
     });
 
     ui.setOnClickHandler([](const char* func) {
-        g_engine.call(func);
+        g_lua_engine.call(func);
     });
 
     const char* code = ui.scriptCode();
-    if (code && code[0]) g_engine.execute(code);
+    if (code && code[0]) g_lua_engine.execute(code);
 }
 
 int main() {
@@ -219,7 +220,7 @@ int main() {
     SECTION("3. timer.once(\"funcName\", ms)");
 
     TEST("call startOnceStr → status = waiting_str") {
-        g_engine.call("startOnceStr");
+        g_lua_engine.call("startOnceStr");
         if (get("status") == "waiting_str") PASS();
         else FAIL_V("status='%s'", get("status").c_str());
     }
@@ -235,7 +236,7 @@ int main() {
     SECTION("4. timer.once(namedFunc, ms)");
 
     TEST("call startNamedRef + fire → count = 111") {
-        g_engine.call("startNamedRef");
+        g_lua_engine.call("startNamedRef");
         tick();
         if (get("count") == "111" && get("status") == "ref_named") PASS();
         else FAIL_V("count='%s' status='%s'", get("count").c_str(), get("status").c_str());
@@ -302,27 +303,27 @@ int main() {
     SECTION("7. timer.interval(\"name\") + timer.clear");
 
     TEST("startClearable + fire → count increases") {
-        int before = State::store().getInt("count");
-        g_engine.call("startClearable");
+        int before = g_core.store().getInt("count");
+        g_lua_engine.call("startClearable");
         tick();
-        int after = State::store().getInt("count");
+        int after = g_core.store().getInt("count");
         if (after == before + 1000) PASS();
         else FAIL_V("before=%d after=%d", before, after);
     }
 
     TEST("fire again → count +1000 more") {
-        int before = State::store().getInt("count");
+        int before = g_core.store().getInt("count");
         tick();
-        int after = State::store().getInt("count");
+        int after = g_core.store().getInt("count");
         if (after == before + 1000) PASS();
         else FAIL_V("before=%d after=%d", before, after);
     }
 
     TEST("doClear + fire → count stays") {
-        g_engine.call("doClear");
-        int before = State::store().getInt("count");
+        g_lua_engine.call("doClear");
+        int before = g_core.store().getInt("count");
         tick();
-        int after = State::store().getInt("count");
+        int after = g_core.store().getInt("count");
         if (after == before) PASS();
         else FAIL_V("before=%d after=%d (not cleared?)", before, after);
     }

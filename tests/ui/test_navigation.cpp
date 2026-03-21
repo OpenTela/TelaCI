@@ -6,7 +6,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* NAV_APP = R"(
@@ -45,9 +46,9 @@ int main() {
     int total = 0;
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
     
-    int count = UI::Engine::instance().render(NAV_APP);
+    int count = g_core.render(NAV_APP);
     printf("Rendered %d widgets\n\n", count);
     
     // === Initial state (default=/home) ===
@@ -84,7 +85,7 @@ int main() {
     // === Navigate to settings ===
     printf("\nNavigate to settings:\n");
     
-    UI::Engine::instance().showPage("settings");
+    g_core.showPage("settings");
     
     TEST("home page hidden after nav to settings");
     {
@@ -103,7 +104,7 @@ int main() {
     // === Navigate to about ===
     printf("\nNavigate to about:\n");
     
-    UI::Engine::instance().showPage("about");
+    g_core.showPage("about");
     
     TEST("settings page hidden after nav to about");
     {
@@ -122,7 +123,7 @@ int main() {
     // === Navigate back to home ===
     printf("\nNavigate back to home:\n");
     
-    UI::Engine::instance().showPage("home");
+    g_core.showPage("home");
     
     TEST("home page visible after nav back");
     {

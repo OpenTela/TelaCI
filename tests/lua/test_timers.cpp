@@ -3,9 +3,9 @@
  * 
  * Tests the full pipeline:
  *   <timer interval="1000" call="tick"/> in HTML
- *   → UI::Engine parses timer declarations
+ *   → Core parses timer declarations
  *   → Lua function updates state
- *   → State::store() reflects changes
+ *   → g_core.store() reflects changes
  *
  * No FreeRTOS needed: we simulate ticks by calling Lua functions directly.
  */
@@ -15,7 +15,8 @@
 
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "engines/lua/lua_engine.h"
 #include "core/state_store.h"
 
@@ -34,10 +35,11 @@ struct App {
         LvglMock::create_screen(480, 480);
         
         engine.shutdown();
+        engine.init();
         
-        UI::Engine::instance().init();
-        UI::Engine::instance().render(html);
-        auto& ui = UI::Engine::instance();
+        g_core.initDynamicApp(nullptr);
+        g_core.render(html);
+        auto& ui = g_core;
         
         // Load state defaults (same as ScriptManager::loadState)
         for (int i = 0; i < ui.stateCount(); i++) {
@@ -47,15 +49,14 @@ struct App {
             if (!name) continue;
             
             if (strcmp(vtype, "int") == 0)
-                State::store().set(name, def ? def : "0");
+                g_core.store().set(name, def ? def : "0");
             else if (strcmp(vtype, "bool") == 0)
-                State::store().set(name, def ? def : "false");
+                g_core.store().set(name, def ? def : "false");
             else
-                State::store().set(name, def ? def : "");
+                g_core.store().set(name, def ? def : "");
         }
         
-        // Init Lua and sync state
-        engine.init();
+        // Sync state to Lua
         for (int i = 0; i < ui.stateCount(); i++) {
             const char* name = ui.stateVarName(i);
             const char* vtype = ui.stateVarType(i);
@@ -84,7 +85,7 @@ struct App {
     }
     
     std::string state(const char* key) {
-        return State::store().getString(key);
+        return g_core.store().getString(key);
     }
     
     ~App() { engine.shutdown(); }
@@ -225,33 +226,33 @@ int main() {
 
     TEST("single timer parsed") {
         app.load(COUNTER_APP);
-        auto& ui = UI::Engine::instance();
+        auto& ui = g_core;
         if (ui.timerCount() == 1) PASS();
         else FAIL_V("count=%d", ui.timerCount());
     }
 
     TEST("timer interval correct") {
-        auto& ui = UI::Engine::instance();
+        auto& ui = g_core;
         if (ui.timerInterval(0) == 1000) PASS();
         else FAIL_V("interval=%d", ui.timerInterval(0));
     }
 
     TEST("timer callback correct") {
-        auto& ui = UI::Engine::instance();
+        auto& ui = g_core;
         if (ui.timerCallback(0) && strcmp(ui.timerCallback(0), "tick") == 0) PASS();
         else FAIL_V("callback='%s'", ui.timerCallback(0) ? ui.timerCallback(0) : "NULL");
     }
 
     TEST("multiple timers parsed") {
         app.load(MULTI_TIMER_APP);
-        auto& ui = UI::Engine::instance();
+        auto& ui = g_core;
         if (ui.timerCount() == 2) PASS();
         else FAIL_V("count=%d", ui.timerCount());
     }
 
     TEST("no timer = count 0") {
         app.load(NO_TIMER_APP);
-        if (UI::Engine::instance().timerCount() == 0) PASS();
+        if (g_core.timerCount() == 0) PASS();
         else FAIL("expected 0");
     }
 

@@ -7,6 +7,7 @@
  * Compile: see test_lua_preprocess.sh
  */
 #include <cstdio>
+#include "ui/ui_html.h"
 #include <cstring>
 
 #include "engines/lua/lua_engine.h"
@@ -23,7 +24,7 @@ int main() {
     
     LuaEngine engine;
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     // === The original bug ===
     printf("original bug:\n");
@@ -42,7 +43,7 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             ok = engine.call("restart");
-            if (ok && State::store().getString("color") == "red") PASS();
+            if (ok && g_core.store().getString("color") == "red") PASS();
             else FAIL("initColors not called");
         }
     }
@@ -50,7 +51,7 @@ int main() {
     // Reset
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("local defined below, called from above");
     {
@@ -66,7 +67,7 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             ok = engine.call("doWork");
-            if (ok && State::store().getString("result") == "ok") PASS();
+            if (ok && g_core.store().getString("result") == "ok") PASS();
             else FAIL("helper not called");
         }
     }
@@ -76,7 +77,7 @@ int main() {
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("two local functions calling each other");
     {
@@ -98,7 +99,7 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("run");
-            auto trace = State::store().getString("trace");
+            auto trace = g_core.store().getString("trace");
             if (trace == "AB") PASS();
             else { FAIL("wrong trace"); printf("      got: '%s'\n", trace.c_str()); }
         }
@@ -109,7 +110,7 @@ int main() {
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("global function not broken by preprocessor");
     {
@@ -121,14 +122,14 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("globalFn");
-            if (State::store().getString("g") == "yes") PASS();
+            if (g_core.store().getString("g") == "yes") PASS();
             else FAIL("global broken");
         }
     }
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("local + global coexist");
     {
@@ -145,7 +146,7 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("globalEntry");
-            auto who = State::store().getString("who");
+            auto who = g_core.store().getString("who");
             if (who == "local+global") PASS();
             else { FAIL("wrong result"); printf("      got: '%s'\n", who.c_str()); }
         }
@@ -156,7 +157,7 @@ int main() {
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("local function params work");
     {
@@ -172,8 +173,8 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("calc");
-            if (State::store().getString("sum") == "42") PASS();
-            else { FAIL("wrong sum"); printf("      got: '%s'\n", State::store().getString("sum").c_str()); }
+            if (g_core.store().getString("sum") == "42") PASS();
+            else { FAIL("wrong sum"); printf("      got: '%s'\n", g_core.store().getString("sum").c_str()); }
         }
     }
     
@@ -182,7 +183,7 @@ int main() {
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("recursive local function");
     {
@@ -199,8 +200,8 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("calcFactorial");
-            if (State::store().getString("fact") == "720") PASS();
-            else { FAIL("wrong factorial"); printf("      got: '%s'\n", State::store().getString("fact").c_str()); }
+            if (g_core.store().getString("fact") == "720") PASS();
+            else { FAIL("wrong factorial"); printf("      got: '%s'\n", g_core.store().getString("fact").c_str()); }
         }
     }
     
@@ -209,7 +210,7 @@ int main() {
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("code without local functions works fine");
     {
@@ -221,7 +222,7 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("simple");
-            if (State::store().getString("val") == "works") PASS();
+            if (g_core.store().getString("val") == "works") PASS();
             else FAIL("simple broken");
         }
     }
@@ -231,7 +232,7 @@ int main() {
     
     engine.shutdown();
     engine.init();
-    State::store().clear();
+    g_core.store().clear();
     
     TEST("indented local function (HTML script tag)");
     {
@@ -247,7 +248,7 @@ int main() {
         if (!ok) { FAIL("execute failed"); }
         else {
             engine.call("boot");
-            if (State::store().getString("init") == "done") PASS();
+            if (g_core.store().getString("init") == "done") PASS();
             else FAIL("indented not handled");
         }
     }

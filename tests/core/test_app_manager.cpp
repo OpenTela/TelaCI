@@ -10,7 +10,8 @@
 #include "lvgl_mock.h"
 #include "core/app_manager.h"
 #include "core/state_store.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 
 #define TEST(name) printf("  %-50s ", name); total++;
 #define PASS() do { printf("✓\n"); passed++; } while(0)
@@ -28,7 +29,7 @@ static const App::AppInfo* findApp(const char* name) {
 
 static void setupVFS() {
     LittleFS.reset();
-    State::store().clear();
+    g_core.store().clear();
 
     // Create /apps/ directory
     LittleFS.mkdir("/apps");
@@ -73,7 +74,7 @@ int main() {
     int passed = 0, total = 0;
 
     LvglMock::create_screen(480, 480);
-    UI::Engine::instance().init();
+    g_core.initDynamicApp(nullptr);
 
     // === AppInfo::path() ===
     printf("AppInfo:\n");

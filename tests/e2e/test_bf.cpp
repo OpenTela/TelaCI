@@ -2,6 +2,7 @@
  * BF Engine Test — Real project code, only external deps mocked
  */
 #include <cstdio>
+#include "ui/ui_html.h"
 #include <cstring>
 #include <string>
 
@@ -38,32 +39,32 @@ int main() {
     bf.execute(HELLO_OPTIMIZED);
     bf.call("run");
     
-    P::String out = State::store().getAsString("_stdout");
+    P::String out = g_core.store().getAsString("_stdout");
     printf("  Output: '%s'\n", out.c_str());
     printf("  Expected: 'Hello World!\\n'\n");
     printf("  %s\n\n", (out == "Hello World!\n") ? "✓ PASS" : "✗ FAIL");
     
     // Test 2: Input/Output (cat program)
     printf("Test 2: Cat program (echo input)...\n");
-    State::store().set("_stdin", "Test123");
-    State::store().set("_stdout", "");
+    g_core.store().set("_stdin", "Test123");
+    g_core.store().set("_stdout", "");
     bf.execute(",.,.,.,.,.,.,.");  // Read 7 chars, output each
     bf.call("run");
     
-    out = State::store().getAsString("_stdout");
+    out = g_core.store().getAsString("_stdout");
     printf("  Input:  'Test123'\n");
     printf("  Output: '%s'\n", out.c_str());
     printf("  %s\n\n", (out == "Test123") ? "✓ PASS" : "✗ FAIL");
     
     // Test 3: Computation (add two numbers)
     printf("Test 3: Add 3+5...\n");
-    State::store().set("_stdin", "");
-    State::store().set("_stdout", "");
+    g_core.store().set("_stdin", "");
+    g_core.store().set("_stdout", "");
     // Cell 0 = 3, Cell 1 = 5, add them, output ASCII digit
     bf.execute("+++>+++++[<+>-]<++++++++++++++++++++++++++++++++++++++++++++++++.");
     bf.call("run");
     
-    out = State::store().getAsString("_stdout");
+    out = g_core.store().getAsString("_stdout");
     printf("  Output: '%s'\n", out.c_str());
     printf("  Expected: '8'\n");
     printf("  %s\n\n", (out == "8") ? "✓ PASS" : "✗ FAIL");

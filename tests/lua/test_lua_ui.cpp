@@ -8,7 +8,8 @@
 #include <string>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "engines/lua/lua_engine.h"
 
@@ -91,11 +92,11 @@ int main() {
     int passed = 0, total = 0;
 
     LvglMock::create_screen(240, 240);
-    auto& state = State::store();
+    auto& state = g_core.store();
     state.clear();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(APP_HTML);
 
     LuaEngine engine;

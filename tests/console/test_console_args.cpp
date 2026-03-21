@@ -25,7 +25,8 @@
 
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "ui/ui_touch.h"
 #include "core/state_store.h"
 #include "console/console.h"
@@ -45,7 +46,7 @@ static int g_passed = 0, g_total = 0;
 static Console::Result R(const char* cmd) { return Console::exec(cmd); }
 static bool ok(const char* cmd)  { return Console::exec(cmd).success; }
 static bool err(const char* cmd) { return !Console::exec(cmd).success; }
-static std::string state(const char* key) { return State::store().getString(key); }
+static std::string state(const char* key) { return g_core.store().getString(key); }
 
 // ═══════════════════════════════════════════════════════
 //  Setup: minimal app with diverse widget IDs
@@ -54,8 +55,8 @@ static std::string state(const char* key) { return State::store().getString(key)
 static void setup() {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().init();
+    g_core.store().clear();
+    g_core.initDynamicApp(nullptr);
     TouchSim::init();
 
     // Widget IDs designed to stress auto-detect:
@@ -85,10 +86,10 @@ static void setup() {
     </app>
     )";
 
-    UI::Engine::instance().render(html);
-    State::store().set("inputVal", "");
-    State::store().set("displayVal", "");
-    State::store().set("myVar", "");
+    g_core.render(html);
+    g_core.store().set("inputVal", "");
+    g_core.store().set("displayVal", "");
+    g_core.store().set("myVar", "");
 }
 
 // ═══════════════════════════════════════════════════════
@@ -168,7 +169,7 @@ int main() {
     SECTION("2. ui get");
 
     TEST("ui get existingVar → ok") {
-        State::store().set("testGet", "val123");
+        g_core.store().set("testGet", "val123");
         if (ok("ui get testGet")) PASS();
         else FAIL("");
     }

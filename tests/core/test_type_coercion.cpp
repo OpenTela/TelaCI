@@ -2,7 +2,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "engines/lua/lua_engine.h"
 
@@ -28,16 +29,16 @@ int main() {
 
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
+    g_core.store().clear();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(HTML);
 
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) State::store().set(name, def ? def : "");
+        if (name) g_core.store().set(name, def ? def : "");
     }
 
     LuaEngine engine;
@@ -54,14 +55,14 @@ int main() {
     // Test 1: default int is number in Lua
     printf("  [1] default <int>=3 type in Lua:  ");
     engine.execute("state.result = type(state.month)");
-    auto r = State::store().getString("result");
+    auto r = g_core.store().getString("result");
     if (r == "number") printf("PASS (%s)\n", r.c_str());
     else { printf("FAIL: got '%s'\n", r.c_str()); failures++; }
 
     // Test 2: default int == 3 comparison
     printf("  [2] state.month == 3:             ");
     engine.execute("if state.month == 3 then state.result = 'yes' else state.result = 'no:' .. type(state.month) .. ':' .. tostring(state.month) end");
-    r = State::store().getString("result");
+    r = g_core.store().getString("result");
     if (r == "yes") printf("PASS\n");
     else { printf("FAIL: got '%s'\n", r.c_str()); failures++; }
 
@@ -69,14 +70,14 @@ int main() {
     printf("  [3] after state.month='5', type:  ");
     engine.execute("state.month = '5'");
     engine.execute("state.result = type(state.month)");
-    r = State::store().getString("result");
+    r = g_core.store().getString("result");
     if (r == "number") printf("PASS (%s)\n", r.c_str());
     else { printf("FAIL: got '%s' — ENGINE BUG!\n", r.c_str()); failures++; }
 
     // Test 4: after string write, == comparison
     printf("  [4] state.month == 5 after str:   ");
     engine.execute("if state.month == 5 then state.result = 'yes' else state.result = 'no:' .. type(state.month) .. ':' .. tostring(state.month) end");
-    r = State::store().getString("result");
+    r = g_core.store().getString("result");
     if (r == "yes") printf("PASS\n");
     else { printf("FAIL: got '%s' — ENGINE BUG!\n", r.c_str()); failures++; }
 
@@ -84,7 +85,7 @@ int main() {
     printf("  [5] after state.month=7, type:    ");
     engine.execute("state.month = 7");
     engine.execute("state.result = type(state.month)");
-    r = State::store().getString("result");
+    r = g_core.store().getString("result");
     if (r == "number") printf("PASS (%s)\n", r.c_str());
     else { printf("FAIL: got '%s'\n", r.c_str()); failures++; }
 
@@ -92,14 +93,14 @@ int main() {
     printf("  [6] after C setState('9'), type:  ");
     engine.setState("month", "9");
     engine.execute("state.result = type(state.month)");
-    r = State::store().getString("result");
+    r = g_core.store().getString("result");
     if (r == "number") printf("PASS (%s)\n", r.c_str());
     else { printf("FAIL: got '%s' — ENGINE BUG!\n", r.c_str()); failures++; }
 
     // Test 7: after C setState, == comparison
     printf("  [7] state.month == 9 after C set: ");
     engine.execute("if state.month == 9 then state.result = 'yes' else state.result = 'no:' .. type(state.month) .. ':' .. tostring(state.month) end");
-    r = State::store().getString("result");
+    r = g_core.store().getString("result");
     if (r == "yes") printf("PASS\n");
     else { printf("FAIL: got '%s' — ENGINE BUG!\n", r.c_str()); failures++; }
 

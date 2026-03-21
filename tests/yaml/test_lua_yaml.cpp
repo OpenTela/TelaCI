@@ -18,6 +18,7 @@
 #include <LittleFS.h>
 #include "engines/lua/lua_engine.h"
 #include "core/state_store.h"
+#include "ui/ui_html.h"
 
 static int g_passed = 0, g_total = 0;
 #define TEST(name)     printf("  %-55s ", name); g_total++;
@@ -26,21 +27,22 @@ static int g_passed = 0, g_total = 0;
 #define FAIL_V(f, ...) do { printf("✗ "); printf(f, __VA_ARGS__); printf("\n"); } while(0)
 #define SECTION(name)  printf("\n%s:\n", name)
 
-static LuaEngine g_engine;
+static LuaEngine g_lua_engine;
 
 static std::string get(const char* var) {
-    return State::store().getString(var);
+    return g_core.store().getString(var);
 }
 
 static bool run(const char* code) {
-    return g_engine.execute(code);
+    return g_lua_engine.execute(code);
 }
 
 static void setup() {
     LvglMock::create_screen(240, 240);
-    State::store().clear();
-    g_engine.shutdown();
-    g_engine.init();
+    g_core.store().clear();
+    g_lua_engine.shutdown();
+    g_lua_engine.init();
+    g_core.initDynamicApp(nullptr);
 }
 
 int main() {

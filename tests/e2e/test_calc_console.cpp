@@ -16,7 +16,8 @@
 
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "ui/ui_touch.h"
 #include "engines/lua/lua_engine.h"
 #include "core/state_store.h"
@@ -169,13 +170,14 @@ struct Calc {
     bool load() {
         LvglMock::reset();
         LvglMock::create_screen(480, 480);
-        State::store().clear();
+        g_core.store().clear();
         engine.shutdown();
+        engine.init();
 
-        UI::Engine::instance().init();
+        g_core.initDynamicApp(nullptr);
         TouchSim::init();
-        UI::Engine::instance().render(CALC_HTML);
-        auto& ui = UI::Engine::instance();
+        g_core.render(CALC_HTML);
+        auto& ui = g_core;
 
         // Load state defaults
         for (int i = 0; i < ui.stateCount(); i++) {
@@ -184,15 +186,14 @@ struct Calc {
             const char* def = ui.stateVarDefault(i);
             if (!name) continue;
             if (strcmp(vtype, "int") == 0)
-                State::store().set(name, def ? def : "0");
+                g_core.store().set(name, def ? def : "0");
             else if (strcmp(vtype, "bool") == 0)
-                State::store().set(name, def ? def : "false");
+                g_core.store().set(name, def ? def : "false");
             else
-                State::store().set(name, def ? def : "");
+                g_core.store().set(name, def ? def : "");
         }
 
-        // Init Lua + sync state
-        engine.init();
+        // Sync state to Lua
         for (int i = 0; i < ui.stateCount(); i++) {
             const char* name = ui.stateVarName(i);
             const char* def = ui.stateVarDefault(i);
@@ -221,7 +222,7 @@ struct Calc {
 
     // Read display
     std::string display() {
-        return State::store().getString("display");
+        return g_core.store().getString("display");
     }
 
     ~Calc() { g_calcEngine = nullptr; engine.shutdown(); }
@@ -280,7 +281,7 @@ int main() {
     }
 
     TEST("State 'display' declared as string, default '0'") {
-        auto& ui = UI::Engine::instance();
+        auto& ui = g_core;
         bool found = false;
         for (int i = 0; i < ui.stateCount(); i++) {
             if (strcmp(ui.stateVarName(i), "display") == 0) {
@@ -868,8 +869,8 @@ int main() {
         calc.click("btn8");
         calc.click("btnEq");
         auto r = Console::exec("ui get display");
-        if (r.success && State::store().getString("display") == "56") PASS();
-        else FAIL_V("got '%s'", State::store().getString("display").c_str());
+        if (r.success && g_core.store().getString("display") == "56") PASS();
+        else FAIL_V("got '%s'", g_core.store().getString("display").c_str());
     }
 
     calc.click("btnC");
@@ -880,13 +881,13 @@ int main() {
         calc.click("btn3");
         calc.click("btnEq");
         // Console reads intermediate
-        std::string mid = State::store().getString("display");
+        std::string mid = g_core.store().getString("display");
         bool midOk = (mid == "5");
         // Continue from Lua
         calc.click("btnAdd");
         calc.click("btn4");
         calc.click("btnEq");
-        std::string fin = State::store().getString("display");
+        std::string fin = g_core.store().getString("display");
         if (midOk && fin == "9") PASS();
         else FAIL_V("mid='%s' fin='%s'", mid.c_str(), fin.c_str());
     }

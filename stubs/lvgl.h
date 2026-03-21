@@ -87,6 +87,7 @@ extern const lv_obj_class_t lv_textarea_class;
 extern const lv_obj_class_t lv_btn_class;
 extern const lv_obj_class_t lv_switch_class;
 extern const lv_obj_class_t lv_slider_class;
+extern const lv_obj_class_t lv_dropdown_class;
 extern const lv_font_t lv_font_montserrat_14;
 extern const lv_font_t lv_font_montserrat_16;
 
@@ -504,6 +505,7 @@ inline bool lv_obj_check_type(lv_obj_t* obj, const lv_obj_class_t* cls) {
     if (cls == &lv_label_class)    return t == "Label";
     if (cls == &lv_switch_class)   return t == "Switch";
     if (cls == &lv_slider_class)   return t == "Slider";
+    if (cls == &lv_dropdown_class) return t == "Dropdown";
     return false;
 }
 #else
@@ -587,6 +589,26 @@ inline int lv_slider_get_value(lv_obj_t* obj) { return (obj && obj->mock_widget)
 
 // Switch
 inline bool lv_switch_get_state(lv_obj_t* obj) { return (obj && obj->mock_widget) ? obj->mock_widget->checked : false; }
+
+// Dropdown
+inline void lv_dropdown_set_options(lv_obj_t* obj, const char* opts) {
+    if (obj && obj->mock_widget) obj->mock_widget->text = opts ? opts : "";
+}
+inline void lv_dropdown_get_options(lv_obj_t* obj, char* buf, uint32_t len) {
+    if (!buf || len == 0) return;
+    if (obj && obj->mock_widget) {
+        strncpy(buf, obj->mock_widget->text.c_str(), len - 1);
+        buf[len - 1] = '\0';
+    } else {
+        buf[0] = '\0';
+    }
+}
+inline void lv_dropdown_set_selected(lv_obj_t* obj, uint16_t idx) {
+    if (obj && obj->mock_widget) obj->mock_widget->curValue = (int)idx;
+}
+inline uint16_t lv_dropdown_get_selected(lv_obj_t* obj) {
+    return (obj && obj->mock_widget) ? (uint16_t)obj->mock_widget->curValue : 0;
+}
 
 // TextArea
 #ifndef lv_textarea_set_text

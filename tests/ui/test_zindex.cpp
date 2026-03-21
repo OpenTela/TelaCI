@@ -6,13 +6,14 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 
 #define TEST(name) printf("  %-50s ", name); total++;
 #define PASS() do { printf("✓\n"); passed++; } while(0)
 #define FAIL(msg) printf("✗ %s\n", msg)
 
-static auto& engine() { return UI::Engine::instance(); }
+static Core& engine() { return g_core; }
 
 static LvglMock::Widget* screen() {
     return LvglMock::g_screen;
@@ -31,8 +32,8 @@ static int childIndex(LvglMock::Widget* w) {
 static void render(const char* html) {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    engine().init();
-    engine().render(html);
+    g_core.initDynamicApp(nullptr);
+    g_core.render(html);
 }
 
 int main() {

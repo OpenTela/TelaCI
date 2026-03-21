@@ -12,7 +12,8 @@
 #include <cstring>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 #include "core/call_queue.h"
 #include "engines/lua/lua_engine.h"
@@ -62,38 +63,38 @@ static const char* HTML = R"HTML(
 </app>
 )HTML";
 
-static LuaEngine g_engine;
+static LuaEngine g_lua_engine;
 
 static void loadApp() {
     LvglMock::reset();
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    g_engine.shutdown();
+    g_core.store().clear();
+    g_lua_engine.shutdown();
     CallQueue::shutdown();
     CallQueue::init();
 
-    auto& ui = UI::Engine::instance();
-    ui.init();
+    auto& ui = g_core;
+    g_core.initDynamicApp(nullptr);
     ui.render(HTML);
 
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) State::store().set(name, def ? def : "");
+        if (name) g_core.store().set(name, def ? def : "");
     }
 
-    g_engine.init();
+    g_lua_engine.init();
     for (int i = 0; i < ui.stateCount(); i++) {
         const char* name = ui.stateVarName(i);
         const char* def = ui.stateVarDefault(i);
-        if (name) g_engine.setState(name, def ? def : "");
+        if (name) g_lua_engine.setState(name, def ? def : "");
     }
 
     CallQueue::setHandler([](const P::String& funcName) {
         if (funcName.find('(') != P::String::npos) {
-            g_engine.execute(funcName.c_str());
+            g_lua_engine.execute(funcName.c_str());
         } else {
-            g_engine.call(funcName.c_str());
+            g_lua_engine.call(funcName.c_str());
         }
     });
 
@@ -102,7 +103,7 @@ static void loadApp() {
     });
 
     const char* code = ui.scriptCode();
-    if (code && code[0]) g_engine.execute(code);
+    if (code && code[0]) g_lua_engine.execute(code);
 }
 
 int main() {
@@ -120,9 +121,9 @@ int main() {
     }
 
     TEST("triggerClick → state.result = 'clicked'") {
-        UI::triggerClick("btnSimple");
+        triggerClick("btnSimple");
         CallQueue::process();
-        auto val = State::store().getString("result");
+        auto val = g_core.store().getString("result");
         if (val == "clicked") PASS();
         else FAIL(val.c_str());
     }
@@ -130,25 +131,25 @@ int main() {
     printf("\nMultiple clicks:\n");
 
     TEST("first click → counter = 1") {
-        UI::triggerClick("btnCount");
+        triggerClick("btnCount");
         CallQueue::process();
-        auto val = State::store().getString("counter");
+        auto val = g_core.store().getString("counter");
         if (val == "1") PASS();
         else FAIL(val.c_str());
     }
 
     TEST("second click → counter = 2") {
-        UI::triggerClick("btnCount");
+        triggerClick("btnCount");
         CallQueue::process();
-        auto val = State::store().getString("counter");
+        auto val = g_core.store().getString("counter");
         if (val == "2") PASS();
         else FAIL(val.c_str());
     }
 
     TEST("third click → counter = 3") {
-        UI::triggerClick("btnCount");
+        triggerClick("btnCount");
         CallQueue::process();
-        auto val = State::store().getString("counter");
+        auto val = g_core.store().getString("counter");
         if (val == "3") PASS();
         else FAIL(val.c_str());
     }
@@ -171,32 +172,32 @@ int main() {
     printf("\nOnclick with arguments:\n");
 
     TEST("btnArgs → onArgs(42,7) → '42_7'") {
-        State::store().set("argResult", "");
-        UI::triggerClick("btnArgs");
+        g_core.store().set("argResult", "");
+        triggerClick("btnArgs");
         CallQueue::process();
-        auto val = State::store().getString("argResult");
+        auto val = g_core.store().getString("argResult");
         if (val == "42_7") PASS();
         else FAIL(val.c_str());
     }
 
     TEST("btnArgs2 → onArgs(1,2) → '1_2'") {
-        State::store().set("argResult", "");
-        UI::triggerClick("btnArgs2");
+        g_core.store().set("argResult", "");
+        triggerClick("btnArgs2");
         CallQueue::process();
-        auto val = State::store().getString("argResult");
+        auto val = g_core.store().getString("argResult");
         if (val == "1_2") PASS();
         else FAIL(val.c_str());
     }
 
     TEST("different buttons → different args") {
-        State::store().set("argResult", "");
-        UI::triggerClick("btnArgs");
+        g_core.store().set("argResult", "");
+        triggerClick("btnArgs");
         CallQueue::process();
-        auto v1 = State::store().getString("argResult");
-        State::store().set("argResult", "");
-        UI::triggerClick("btnArgs2");
+        auto v1 = g_core.store().getString("argResult");
+        g_core.store().set("argResult", "");
+        triggerClick("btnArgs2");
         CallQueue::process();
-        auto v2 = State::store().getString("argResult");
+        auto v2 = g_core.store().getString("argResult");
         if (v1 == "42_7" && v2 == "1_2") PASS();
         else { char buf[64]; snprintf(buf, sizeof(buf), "v1=%s v2=%s", v1.c_str(), v2.c_str()); FAIL(buf); }
     }

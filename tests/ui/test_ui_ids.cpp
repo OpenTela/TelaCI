@@ -4,7 +4,8 @@
 #include <cstdio>
 #include "lvgl.h"
 #include "lvgl_mock.h"
-#include "ui/ui_engine.h"
+#include "core/core.h"
+#include "core/core.h"
 #include "core/state_store.h"
 
 const char* APP = R"(
@@ -28,8 +29,8 @@ int main() {
     int failures = 0;
     
     LvglMock::create_screen(480, 480);
-    State::store().clear();
-    UI::Engine::instance().render(APP);
+    g_core.store().clear();
+    g_core.render(APP);
     
     auto* page = LvglMock::g_screen->first("Container");
     
