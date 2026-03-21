@@ -227,8 +227,8 @@ int main() {
     TEST("single timer parsed") {
         app.load(COUNTER_APP);
         auto& ui = g_core;
-        if (ui.timerCount() == 1) PASS();
-        else FAIL_V("count=%d", ui.timerCount());
+        if (ui.timersCount() == 1) PASS();
+        else FAIL_V("count=%d", ui.timersCount());
     }
 
     TEST("timer interval correct") {
@@ -246,13 +246,13 @@ int main() {
     TEST("multiple timers parsed") {
         app.load(MULTI_TIMER_APP);
         auto& ui = g_core;
-        if (ui.timerCount() == 2) PASS();
-        else FAIL_V("count=%d", ui.timerCount());
+        if (ui.timersCount() == 2) PASS();
+        else FAIL_V("count=%d", ui.timersCount());
     }
 
     TEST("no timer = count 0") {
         app.load(NO_TIMER_APP);
-        if (g_core.timerCount() == 0) PASS();
+        if (g_core.timersCount() == 0) PASS();
         else FAIL("expected 0");
     }
 
